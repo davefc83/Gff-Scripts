@@ -168,6 +168,7 @@ def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC):
 						INFO[parts[0]] = parts[1]
 					if 'Name' in INFO and idfield == "":
 						Name = INFO['Name']
+						idfield = 'Name'
 					elif idfield != "" and idfield in INFO:
 						Name = INFO[idfield]
 					if 'Parent' in INFO:
@@ -187,14 +188,14 @@ def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC):
 						if rename == 0:
 							INFO['ClusterName'] = Name + "_" + INFO['Cluster'] + "_" + INFO['ClusterNum']
 						else:
-							INFO['Name'] = Name + "_" + INFO['Cluster'] + "_" + INFO['ClusterNum']
+							INFO[idfield] = Name + "_" + INFO['Cluster'] + "_" + INFO['ClusterNum']
 						newinfo = []
 						if "ID" in INFO:
 							newinfo.append("ID" + "=" + INFO["ID"])						
 						if 'Name' in INFO:
 							newinfo.append('Name' + "=" + INFO['Name'])						
-	#					elif 'HostGene_id' in INFO:
-	#						newinfo.append('HostGene_id' + "=" + INFO['HostGene_id'])						
+						elif idfield in INFO:
+							newinfo.append(idfield + "=" + INFO[idfield])						
 						if 'Parent' in INFO:
 							newinfo.append('Parent' + "=" + INFO['Parent'])						
 						if 'ClusterName' in INFO:
@@ -203,7 +204,7 @@ def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC):
 							noextra = []
 							if rename == 2:
 								noextra = ['Cluster','ClusterNum']
-							if meta not in ["ID",'Name','Parent','ClusterName'] + noextra:
+							if meta not in ["ID",'Name','Parent','ClusterName',idfield] + noextra:
 								newinfo.append(meta + "=" + INFO[meta])						
 						outgff.write(Thisexon.noinfogff() + ";".join(newinfo) + "\n")
 					else:
