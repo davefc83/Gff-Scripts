@@ -158,26 +158,29 @@ def WRITELINES(lines,idfield,GENEDIC,CLUSTERDIC):
 			
 				if feature == "CDS":
 					Thisexon = NewGffExon(scaff,source,feature,exonstart,exonend,quality,exondir,frame,exoninfo,Name,Parent,ID,INFO)
-					INFO['ClusterNum'] = "CLUST" + "0"*(intpos-len(str(GENEDIC[Thisexon.HitIdent])))+str(GENEDIC[Thisexon.HitIdent])
-					isoform = CLUSTERDIC[GENEDIC[Thisexon.HitIdent]].index(Thisexon.HitIdent) + 1
-					isopos = len(str(len(CLUSTERDIC[GENEDIC[Thisexon.HitIdent]])))
-					isonum = "0"*(isopos-len(str(isoform)))+str(isoform)
-					INFO['Cluster'] = Name + "_" + INFO['ClusterNum'] + "_" + isonum
-					newinfo = []
-					if "ID" in INFO:
-						newinfo.append("ID" + "=" + INFO["ID"])						
-					if 'Name' in INFO:
-						newinfo.append('Name' + "=" + INFO['Name'])						
-#					elif 'HostGene_id' in INFO:
-#						newinfo.append('HostGene_id' + "=" + INFO['HostGene_id'])						
-					if 'Parent' in INFO:
-						newinfo.append('Parent' + "=" + INFO['Parent'])						
-					if 'Cluster' in INFO:
-						newinfo.append('Cluster' + "=" + INFO['Cluster'])						
-					for meta in INFO:
-						if meta not in ["ID",'Name','Parent','Cluster']:
-							newinfo.append(meta + "=" + INFO[meta])						
-					outgff.write(Thisexon.noinfogff() + ";".join(newinfo) + "\n")
+					if len(CLUSTERDIC[GENEDIC[Thisexon.HitIdent]]) > 1:
+						INFO['Cluster'] = "CLUST" + "0"*(intpos-len(str(GENEDIC[Thisexon.HitIdent])))+str(GENEDIC[Thisexon.HitIdent])
+						isoform = CLUSTERDIC[GENEDIC[Thisexon.HitIdent]].index(Thisexon.HitIdent) + 1
+						isopos = len(str(len(CLUSTERDIC[GENEDIC[Thisexon.HitIdent]])))
+						INFO['ClusterNum'] = "0"*(isopos-len(str(isoform)))+str(isoform) + "_" + str(len(CLUSTERDIC[GENEDIC[Thisexon.HitIdent]]))
+						INFO['ClusterName'] = Name + "_" + INFO['Cluster'] + "_" + INFO['ClusterNum']
+						newinfo = []
+						if "ID" in INFO:
+							newinfo.append("ID" + "=" + INFO["ID"])						
+						if 'Name' in INFO:
+							newinfo.append('Name' + "=" + INFO['Name'])						
+	#					elif 'HostGene_id' in INFO:
+	#						newinfo.append('HostGene_id' + "=" + INFO['HostGene_id'])						
+						if 'Parent' in INFO:
+							newinfo.append('Parent' + "=" + INFO['Parent'])						
+						if 'Cluster' in INFO:
+							newinfo.append('Cluster' + "=" + INFO['Cluster'])						
+						for meta in INFO:
+							if meta not in ["ID",'Name','Parent','Cluster']:
+								newinfo.append(meta + "=" + INFO[meta])						
+						outgff.write(Thisexon.noinfogff() + ";".join(newinfo) + "\n")
+					else:
+						outgff.write(line)
 				else:
 	#				NotEXON.append(NewGffExon(scaff,source,feature,exonstart,exonend,quality,exondir,frame,exoninfo,Name,Parent,ID,INFO))
 					outgff.write(line)
@@ -400,8 +403,14 @@ for x in Scaffolds:
 			CLUSTERDIC[n] = cluster
 			for gene in cluster:
 				GENEDIC[gene] = n
-			if len(cluster) > 1:
-				match.write(str(n) + "\t" + str(cluster) + "\n")
+
+intpos = len(str(len(CLUSTERDIC)))
+				
+for n in CLUSTERDIC:
+	cluster = CLUSTERDIC[n]
+	if len(cluster) > 1:
+		clust = "CLUST" + "0"*(intpos-len(n))+str(n)
+		match.write(str(clust) + "\t" + ",".join(cluster) + "\n")
 	
 try:
 	WRITELINES(peplines,idfield,GENEDIC,CLUSTERDIC)
