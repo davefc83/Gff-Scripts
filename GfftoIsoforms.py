@@ -1,6 +1,11 @@
 #!/usr/bin/python
 #David Clarke  -  daveclarke.bioinfo@gmail.com
 #
+#--------------------------------
+#GfftoIsoforms.py
+#--------------------------------
+#version 1.1 12.10.2014
+
 #This script is for identifying overlapping CDS sequences in a gff3 file
 #The input is a gff3 file (-i) and output name without the file extention (-o)
 #There is optional input of a non standard 'Name' field (-n)
