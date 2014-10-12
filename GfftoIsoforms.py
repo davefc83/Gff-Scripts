@@ -1,7 +1,16 @@
 #!/usr/bin/python
 #David Clarke  -  daveclarke.bioinfo@gmail.com
 #
-#This script is for identifying likely genes from gff files displaying exonerate data created using the Genefinder script.
+#This script is for identifying overlapping CDS sequences in a gff3 file
+#The input is a gff3 file (-i) and output name without the file extention (-o)
+#There is optional input of a non standard 'Name' field (-n)
+#The output is a txt file showing entries that form overlapping clusters and a modified gff3 file
+#Output options are --rename, renameonly and --clusterall
+#The defult is to create new entries in the gff3 for CDS lines that form clusters
+#defult enteries are 'ClusterName','Cluster' and 'ClusterNum'
+#If --rename is specified then the 'ClusterName' data will instead be written into 'Name'
+# --renameonly will do the same as above but also not inclusde the 'Cluster' and 'ClusterNum' enteries
+#If --clusterall is specified then all CDS lines will be assigned to clusters (clusters of one)
 
 import time
 import math
