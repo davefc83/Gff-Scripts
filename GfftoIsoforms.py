@@ -1,83 +1,30 @@
-#!/usr/bin/python
-#David Clarke  -  daveclarke.bioinfo@gmail.com
-#
+#!/usr/local/bin/env python
+#Version 1.1 David Clarke, 12.10.2014.
+#Contact David Clarke, daveclarke.bioinfo@gmail.com
+
 #--------------------------------
 #GfftoIsoforms.py
 #--------------------------------
-#version 1.1 12.10.2014
 
 #This script is for identifying overlapping CDS sequences in a gff3 file
-#The input is a gff3 file (-i) and output name without the file extention (-o)
+#The input is a gff3 file (-i) and output name without the file extension (-o)
 #There is optional input of a non standard 'Name' field (-n)
 #The output is a txt file showing entries that form overlapping clusters and a modified gff3 file
 #Output options are --rename, renameonly and --clusterall
-#The defult is to create new entries in the gff3 for CDS lines that form clusters
-#defult enteries are 'ClusterName','Cluster' and 'ClusterNum'
+#The default is to create new entries in the gff3 for CDS lines that form clusters
+#default entries are 'ClusterName','Cluster' and 'ClusterNum'
 #If --rename is specified then the 'ClusterName' data will instead be written into 'Name'
-# --renameonly will do the same as above but also not inclusde the 'Cluster' and 'ClusterNum' enteries
+# --renameonly will do the same as above but also not include the 'Cluster' and 'ClusterNum' entries
 #If --clusterall is specified then all CDS lines will be assigned to clusters (clusters of one)
 
+###Import modules
 import time
 import math
 import sys
-
+import argparse;
 from operator import itemgetter
 
-
-localtime = time.localtime(time.time())
-year = localtime[0]
-month = localtime[1]
-day = localtime[2]
-date =(str(day) + "." + str(month) + "." + str(year))
-#date = str("6.12.2011")
-
-print "day : " + str(day) + ", month : " + str(month) + ", year : " + str(year)
-
-pepgff = str(sys.argv[1])
-outfile = str(sys.argv[2])
-idfield = ""
-rename = 0
-clusterall = 0
-
-INPUT = []
-n = 0
-while True:
-	try:
-		n +=1
-		INPUT.append(sys.argv[n])
-	except:
-#		print "inputs = " + str(n-1)
-		break
-n = 0	
-for input in INPUT:
-	n +=1
-#	print str(n) + "\t" + str(input)
-	if input == "-i":
-		pepgff = INPUT[n]
-	if input == "-o":
-		outfile = INPUT[n]
-	if input == "-n":
-		idfield = INPUT[n]
-	if input == "--rename":
-		rename = 1
-	if input == "--renameonly":
-		rename = 2
-	if input == "--clusterall":
-		clusterall = 1
-		
-#sys.exit("Exiting")
-	
-if outfile + ".gff3" == pepgff:
-	print "Output file will override input file"
-	sys.exit("Exiting")
-
-
-match = open(outfile + ".txt",'w')
-outgff = open(outfile + ".gff3",'w')
-#mtable = open(outfile + "2",'w')
-#ctable = open(outfile + "3",'w')
-
-
+###Function definitions.
 def READLINES(lines,idfield):
 	ExonList = []
 	NotEXON = []
@@ -127,12 +74,10 @@ def READLINES(lines,idfield):
 						sys.exit("CDS entry did not have a 'Name' assigned, check gff3 for a uniqe naming field in the info\n"+rline+"\nUse '-n NameID' to indicate the naming field\nExiting")
 				else:
 					NotEXON.append(NewGffExon(scaff,source,feature,exonstart,exonend,quality,exondir,frame,exoninfo,Name,Parent,ID,INFO))
-	
-
 
 	return ExonList
 
-def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC):
+def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC,outgff):
 #	ExonList = []
 #	NotEXON = []
 	intpos = len(str(len(CLUSTERDIC)))
@@ -391,73 +336,119 @@ class NewGffExon:
 #	def __eq__(self, other): 
 #		return self.__dict__ == other.__dict__
 
+def main(ingff, outfile, idfield, rename, clusterall):	
+
+	localtime = time.localtime(time.time())
+	year = localtime[0]
+	month = localtime[1]
+	day = localtime[2]
+	date =(str(day) + "." + str(month) + "." + str(year))
+	print "day : " + str(day) + ", month : " + str(month) + ", year : " + str(year)
+
+	if outfile + ".gff3" == ingff:
+		print "Output file will override input file"
+		sys.exit("Exiting")
+
+	match = open(outfile + ".txt",'w')
+	outgff = open(outfile + ".gff3",'w')
+	#mtable = open(outfile + "2",'w')
+	#ctable = open(outfile + "3",'w')
+
+	try:
+		peplines = []
+		pepfile = open(ingff,'r')
+		peplines = pepfile.readlines()
+		pepfile.close()
+	except:
+		print "problem reading pep gff files"
 		
-try:
-	peplines = []
-	pepfile = open(pepgff,'r')
-	peplines = pepfile.readlines()
-	pepfile.close()
-except:
-	print "problem reading pep gff files"	
-	
-	
-PepExons = []
-	
-try:
-	PepExons = READLINES(peplines,idfield)
-except Exception, e:
-	print "problem reading gff lines" + str(e)
-	
-try:
-	Scaffolds = set()
-	for x in PepExons:
-		Scaffolds.add(x.scaff)
-except:
-	print "error finding Scaffolds"
-
-	
-CLUSTERDIC = {}
-GENEDIC = {}
-
-n = 0
-for x in sorted(Scaffolds):
-	PEXONS = SORTEXONS(x,PepExons)
-	PEF = PEXONS[0]
-	PER = PEXONS[1]
-	
-	ScaffSeq = ""
-	
-	CSF = CLUSTSCAF(PEF,"+")	#
-	CSR = CLUSTSCAF(PER,"-")	#
-	
-	for CS in [CSF,CSR]:
-		for cluster in CS[0]:
-			if len(cluster) > 1 or clusterall == 1:
-				n += 1
-				CLUSTERDIC[n] = cluster
-				for gene in cluster:
-					GENEDIC[gene] = n
-
-if len(CLUSTERDIC) > 0:
-	intpos = len(str(len(CLUSTERDIC)))
-	for n in CLUSTERDIC:
-		cluster = CLUSTERDIC[n]
-		if len(cluster) > 1:
-			clust = "CLUST" + "0"*(intpos-len(str(n)))+str(n)
-			match.write(str(clust) + "\t" + ",".join(cluster) + "\n")
-else:
-	match.write("No Clusters found\n")
-	
-try:
-	WRITELINES(peplines,idfield,rename,GENEDIC,CLUSTERDIC)
-except Exception, e:
-	print "problem writing gff lines; " + str(e)	
+	PepExons = []
 		
+	try:
+		PepExons = READLINES(peplines,idfield)
+	except Exception, e:
+		print "problem reading gff lines" + str(e)
+		
+	try:
+		Scaffolds = set()
+		for x in PepExons:
+			Scaffolds.add(x.scaff)
+	except:
+		print "error finding Scaffolds"
+
+		
+	CLUSTERDIC = {}
+	GENEDIC = {}
+
+	n = 0
+	for x in sorted(Scaffolds):
+		PEXONS = SORTEXONS(x,PepExons)
+		PEF = PEXONS[0]
+		PER = PEXONS[1]
+		
+		ScaffSeq = ""
+		
+		CSF = CLUSTSCAF(PEF,"+")	#
+		CSR = CLUSTSCAF(PER,"-")	#
+		
+		for CS in [CSF,CSR]:
+			for cluster in CS[0]:
+				if len(cluster) > 1 or clusterall == 1:
+					n += 1
+					CLUSTERDIC[n] = cluster
+					for gene in cluster:
+						GENEDIC[gene] = n
+
+	if len(CLUSTERDIC) > 0:
+		intpos = len(str(len(CLUSTERDIC)))
+		for n in CLUSTERDIC:
+			cluster = CLUSTERDIC[n]
+			if len(cluster) > 1:
+				clust = "CLUST" + "0"*(intpos-len(str(n)))+str(n)
+				match.write(str(clust) + "\t" + ",".join(cluster) + "\n")
+	else:
+		match.write("No Clusters found\n")
+		
+	try:
+		WRITELINES(peplines,idfield,rename,GENEDIC,CLUSTERDIC,outgff)
+	except Exception, e:
+		print "problem writing gff lines; " + str(e)	
+			
+
+	outgff.close()		
+	match.close()
+	#mtable.close()
+	#ctable.close()
+
+if __name__== '__main__':
+	###Argument handling.
+	arg_parser = argparse.ArgumentParser(description='');
+	arg_parser.add_argument("-i","--input", default=None, help="Gff3 input file to be clustered.");
+	arg_parser.add_argument("-o","--outfile", default=None, help="Desired name of output files (two files created .gff3 and .txt)");
+	arg_parser.add_argument("-n","--idfield", default='Name', help="Field in gff3 notes column to use as unique identifier for CDS annotations, defaults to 'Name'.");
+	arg_parser.add_argument("--rename", action='store_true', default=False, help="If specified then the 'ClusterName' data will instead be written into 'Name' field.");
+	arg_parser.add_argument("--renameonly", action='store_true', default=False, help="Same as 'rename option' but will not also include 'Cluster' and 'ClusterNum' as additional note entries.");
+	arg_parser.add_argument("--clusterall", action='store_true', default=False, help="If specified then all CDS lines will be assigned to clusters (clusters of one).");
+	#arg_parser.add_argument("-b","--bool", action='store_true', default=False, help="");
+	#arg_parser.add_argument("-v", '--verbose', action="count", help="Counts instaces of -v, -vv = very detailed");
 	
-	
-	
-	
-outgff.close()		
-match.close()
-#mtable.close()
-#ctable.close()
+	#Parse args and assign to var 'args'
+	args = arg_parser.parse_args();
+
+	###Variable Definitions
+	#verbose=args.verbose;
+	ingff=args.input;
+	outfile=args.outfile;
+	idfield=args.idfield;
+	rename=args.rename;
+	if rename:
+		rename=1;
+	renameonly=args.renameonly;
+	if renameonly:
+		rename=2;
+	clusterall=args.clusterall;
+	if clusterall:
+		clusterall=1;
+
+	#Feed to main()
+	main(ingff, outfile, idfield, rename, clusterall);
