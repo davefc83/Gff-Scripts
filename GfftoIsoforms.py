@@ -168,7 +168,7 @@ def WRITELINES(lines,idfield,rename,GENEDIC,CLUSTERDIC,outgff):
 def SORTEXONS(scaffold,ExonList):
 	CSLF = []
 	CSLR = []
-	print "Finding exons in " + scaffold + "\n"
+	print "\n" + "Finding exons in " + scaffold
 	for y in ExonList:
 		if y.scaff == scaffold:
 			if y.exondir == "+":# or "-":
@@ -177,15 +177,12 @@ def SORTEXONS(scaffold,ExonList):
 				CSLR.append(y)
 			else:
 				print "Read dir error\n" + str(y)
-			
-					
+
 	RSCSLF = sorted(CSLF, key=lambda gffexon: gffexon.exonend, reverse=True)
 	RSCSLR = sorted(CSLR, key=lambda gffexon: gffexon.exonstart, reverse=False)
 			
 	FSCSLF = sorted(RSCSLF, key=lambda gffexon: gffexon.exonstart, reverse=False)
 	FSCSLR = sorted(RSCSLR, key=lambda gffexon: gffexon.exonend, reverse=True)
-			
-
 		
 	return FSCSLF,FSCSLR
 						
@@ -355,17 +352,17 @@ def main(ingff, outfile, idfield, rename, clusterall):
 	#ctable = open(outfile + "3",'w')
 
 	try:
-		peplines = []
-		pepfile = open(ingff,'r')
-		peplines = pepfile.readlines()
-		pepfile.close()
+		cdslines = []
+		cdsfile = open(ingff,'r')
+		cdslines = cdsfile.readlines()
+		cdsfile.close()
 	except:
-		print "problem reading pep gff files"
+		print "problem reading gff files"
 		
 	PepExons = []
 		
 	try:
-		PepExons = READLINES(peplines,idfield)
+		PepExons = READLINES(cdslines,idfield)
 	except Exception, e:
 		print "problem reading gff lines" + str(e)
 		
@@ -376,7 +373,6 @@ def main(ingff, outfile, idfield, rename, clusterall):
 	except:
 		print "error finding Scaffolds"
 
-		
 	CLUSTERDIC = {}
 	GENEDIC = {}
 
@@ -388,8 +384,8 @@ def main(ingff, outfile, idfield, rename, clusterall):
 		
 		ScaffSeq = ""
 		
-		CSF = CLUSTSCAF(PEF,"+")	#
-		CSR = CLUSTSCAF(PER,"-")	#
+		CSF = CLUSTSCAF(PEF,"+")
+		CSR = CLUSTSCAF(PER,"-")
 		
 		for CS in [CSF,CSR]:
 			for cluster in CS[0]:
@@ -410,12 +406,12 @@ def main(ingff, outfile, idfield, rename, clusterall):
 		match.write("No Clusters found\n")
 		
 	try:
-		WRITELINES(peplines,idfield,rename,GENEDIC,CLUSTERDIC,outgff)
+		WRITELINES(cdslines,idfield,rename,GENEDIC,CLUSTERDIC,outgff)
 	except Exception, e:
-		print "problem writing gff lines; " + str(e)	
+		print "problem writing gff lines; " + str(e)
 			
 
-	outgff.close()		
+	outgff.close()
 	match.close()
 	#mtable.close()
 	#ctable.close()

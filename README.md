@@ -12,7 +12,7 @@ GfftoIsoforms.py
 --------------------------------
 Version 1.1 12.10.2014
 
-Description
+##Description
 
 A script that identifies overlapping CDS entries in gff files
 It creates the extra fields 'Cluster', 'ClusterName' and 'ClusterNum' in the info field (9th column).
@@ -23,10 +23,12 @@ It creates the extra fields 'Cluster', 'ClusterName' and 'ClusterNum' in the inf
 
 'ClusterName' is a composite of the sequence identifier, Cluster and ClusterNum
 
-Input
+##Input
 
-usage: GfftoIsoforms.py [-h] [-o OUTFILE] [-n IDFIELD] [-i INPUT] [--rename]
-                        [--renameonly] [--clusterall]
+usage: 
+```
+GfftoIsoforms.py [-h] [-o OUTFILE] [-n IDFIELD] [-i INPUT] [--rename] [--renameonly] [--clusterall]
+```
 
 Required arguments:
   -i INPUT, --input INPUT
@@ -48,7 +50,7 @@ Optional arguments:
   --clusterall          If specified then all CDS lines will be assigned to
                         clusters (clusters of one).
 
-Output
+##Output
 
 'outputfile_without_extention.gff3'
 Edited gff3 file, only the CDS lines will be edited, with the 'Cluster' and 'ClusterNum' fields added.
